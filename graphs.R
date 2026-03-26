@@ -1,12 +1,14 @@
 library(tidyverse)
 library(ggplot2)
 
-
 getwd()
 dataset <- read.csv("exoplanets.csv")
-dataset
 
+# ==============================
+# Data selection and cleaning
+# ==============================
 
+# Select relevant variables for analysis
 data_clean <- dataset %>%
   select(
     koi_disposition,
@@ -32,12 +34,15 @@ data_clean <- dataset %>%
     koi_fpflag_ec
   )
 
-data_clean
+# ==============================
+# Distribution of planetary radius
+# ==============================
 
-#KOI_PRAD
+# Remove missing values and apply log transformation
 radius <- na.omit(data_clean$koi_prad)
 log_radius <- log10(radius)
 
+# Plot histogram with median line
 ggplot(data.frame(log_radius), aes(x = log_radius)) +
   geom_histogram(bins = 40, fill = "lightblue", color = "white") +
   geom_vline(xintercept = median(log_radius), color = "red", linewidth = 0.8) +
@@ -48,12 +53,16 @@ ggplot(data.frame(log_radius), aes(x = log_radius)) +
   ) +
   theme_minimal()
 
+# ==============================
+# Distribution of orbital period
+# ==============================
 
-#KOI_PERIOD
+# Remove missing values and apply log transformation
 period <- na.omit(data_clean$koi_period)
 log_period <- log10(period)
 
-ggplot(data_clean, aes(x = log_period)) +
+# Plot histogram
+ggplot(data.frame(log_period), aes(x = log_period)) +
   geom_histogram(bins = 40, fill = "lightblue", color = "white") +
   geom_vline(xintercept = median(log_period), color = "red", linewidth = 0.8) +
   labs(
@@ -63,24 +72,34 @@ ggplot(data_clean, aes(x = log_period)) +
   ) +
   theme_minimal()
 
-#KOI_DURATION
+# ==============================
+# Distribution of transit duration
+# ==============================
+
+# Remove missing values and apply log transformation
 duration <- na.omit(data_clean$koi_duration)
 log_duration <- log10(duration)
 
+# Plot histogram
 ggplot(data.frame(log_duration), aes(x = log_duration)) +
   geom_histogram(bins = 40, fill = "lightblue", color = "white") +
   geom_vline(xintercept = median(log_duration), color = "red", linewidth = 0.8) +
   labs(
-    title = "Distribution of Transit Duration",
-    x = "Transit Duration [hours]",
+    title = "Distribution of Transit Duration (Log Scale)",
+    x = "log10(Transit Duration [hours])",
     y = "Frequency"
   ) +
   theme_minimal()
 
-#KOI_DEPTH
+# ==============================
+# Distribution of transit depth
+# ==============================
+
+# Remove missing values and apply log transformation
 depth <- na.omit(data_clean$koi_depth)
 log_depth <- log10(depth)
 
+# Plot histogram
 ggplot(data.frame(log_depth), aes(x = log_depth)) +
   geom_histogram(bins = 40, fill = "lightblue", color = "white") +
   geom_vline(xintercept = median(log_depth), color = "red", linewidth = 0.8) +
@@ -91,9 +110,14 @@ ggplot(data.frame(log_depth), aes(x = log_depth)) +
   ) +
   theme_minimal()
 
-#KOI_STEFF
+# ==============================
+# Distribution of stellar temperature
+# ==============================
+
+# Remove missing values (no log transformation applied)
 star_temp <- na.omit(data_clean$koi_steff)
 
+# Plot histogram
 ggplot(data.frame(star_temp), aes(x = star_temp)) +
   geom_histogram(bins = 40, fill = "lightblue", color = "white") +
   geom_vline(xintercept = median(star_temp), color = "red", linewidth = 0.8) +
@@ -104,16 +128,21 @@ ggplot(data.frame(star_temp), aes(x = star_temp)) +
   ) +
   theme_minimal()
 
-#KOI_SRAD
+# ==============================
+# Distribution of stellar radius
+# ==============================
+
+# Remove missing values and apply log transformation
 srad <- na.omit(data_clean$koi_srad)
 log_srad <- log10(srad)
 
+# Plot histogram
 ggplot(data.frame(log_srad), aes(x = log_srad)) +
   geom_histogram(bins = 40, fill = "lightblue", color = "white") +
   geom_vline(xintercept = median(log_srad), color = "red", linewidth = 0.8) +
   labs(
-    title = "Distribution of Stellar Radius",
-    x = "Stellar Radius [Solar radii]",
+    title = "Distribution of Stellar Radius (Log Scale)",
+    x = "log10(Stellar Radius [Solar radii])",
     y = "Frequency"
   ) +
   theme_minimal()
