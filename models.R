@@ -680,3 +680,17 @@ df_no_na_multi$pred_030 <- ifelse(df_no_na_multi$pred_prob > 0.30, 1, 0)
 plot_confusion(df_no_na_multi$pred_010, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.10)")
 plot_confusion(df_no_na_multi$pred_020, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.20)")
 plot_confusion(df_no_na_multi$pred_030, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.30)")
+
+# ==============================
+# ROC
+# ==============================
+
+roc_multi <- roc(df_no_na_multi$confirmed,
+                 df_no_na_multi$pred_prob)
+
+plot(roc_multi,
+     col = "blue",
+     lwd = 2,
+     main = "ROC Curve - Multiple Logistic Regression")
+
+auc(roc_multi)
