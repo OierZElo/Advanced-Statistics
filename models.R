@@ -399,45 +399,40 @@ plot_confusion <- function(pred, actual, title) {
 plot_confusion(df_no_na$pred_010, df_no_na$confirmed, "Confusion Matrix (threshold = 0.10)")
 plot_confusion(df_no_na$pred_020, df_no_na$confirmed, "Confusion Matrix (threshold = 0.20)")
 plot_confusion(df_no_na$pred_030, df_no_na$confirmed, "Confusion Matrix (threshold = 0.30)")
-
 # ==============================
 # Simple Logistic Regression (koi_model_snr)
 # ==============================
 
 # Prepare data
-df_no_na <- df %>%
+df_no_na_snr <- df %>%
   select(koi_disposition, koi_model_snr) %>%
   na.omit()
 
 # Sort values for a cleaner probability curve
-df_no_na <- df_no_na[order(df_no_na$koi_model_snr), ]
+df_no_na_snr <- df_no_na_snr[order(df_no_na_snr$koi_model_snr), ]
 
 # Create binary response variable
-df_no_na$confirmed <- ifelse(df_no_na$koi_disposition == "CONFIRMED", 1, 0)
+df_no_na_snr$confirmed <- ifelse(df_no_na_snr$koi_disposition == "CONFIRMED", 1, 0)
 
-# ==============================
 # Fit logistic regression model
-# ==============================
-
-model_log_simple <- glm(confirmed ~ koi_model_snr,
-                        data = df_no_na,
-                        family = binomial)
+model_log_snr <- glm(
+  confirmed ~ koi_model_snr,
+  data = df_no_na_snr,
+  family = binomial
+)
 
 # Model summary and odds ratios
-summary(model_log_simple)
-exp(coef(model_log_simple))
+summary(model_log_snr)
+exp(coef(model_log_snr))
 
-# ==============================
 # Predicted probabilities
-# ==============================
-
-df_no_na$pred_prob <- predict(model_log_simple, type = "response")
+df_no_na_snr$pred_prob <- predict(model_log_snr, type = "response")
 
 # ==============================
 # Probability plot
 # ==============================
 
-ggplot(df_no_na, aes(x = koi_model_snr, y = confirmed)) +
+ggplot(df_no_na_snr, aes(x = koi_model_snr, y = confirmed)) +
   geom_jitter(height = 0.02, alpha = 0.2) +
   geom_line(aes(y = pred_prob), color = "red", linewidth = 1) +
   labs(
@@ -451,19 +446,15 @@ ggplot(df_no_na, aes(x = koi_model_snr, y = confirmed)) +
 # Diagnostic data
 # ==============================
 
-diag_log <- data.frame(
-  fitted = fitted(model_log_simple),
-  residuals = residuals(model_log_simple, type = "deviance"),
-  std_residuals = rstandard(model_log_simple),
-  leverage = hatvalues(model_log_simple)
+diag_log_snr <- data.frame(
+  fitted = fitted(model_log_snr),
+  residuals = residuals(model_log_snr, type = "deviance"),
+  std_residuals = rstandard(model_log_snr),
+  leverage = hatvalues(model_log_snr)
 )
 
-# ==============================
-# Diagnostic plots
-# ==============================
-
 # Residuals vs fitted values
-ggplot(diag_log, aes(x = fitted, y = residuals)) +
+ggplot(diag_log_snr, aes(x = fitted, y = residuals)) +
   geom_point(alpha = 0.3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_smooth(method = "loess", se = FALSE, color = "blue") +
@@ -475,7 +466,7 @@ ggplot(diag_log, aes(x = fitted, y = residuals)) +
   theme_minimal()
 
 # Observed vs predicted probabilities
-ggplot(df_no_na, aes(x = pred_prob, y = confirmed)) +
+ggplot(df_no_na_snr, aes(x = pred_prob, y = confirmed)) +
   geom_jitter(height = 0.02, alpha = 0.2) +
   labs(
     title = "Observed vs Predicted Probabilities",
@@ -485,7 +476,7 @@ ggplot(df_no_na, aes(x = pred_prob, y = confirmed)) +
   theme_minimal()
 
 # Residuals vs leverage
-ggplot(diag_log, aes(x = leverage, y = std_residuals)) +
+ggplot(diag_log_snr, aes(x = leverage, y = std_residuals)) +
   geom_point(alpha = 0.4) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_smooth(se = FALSE, method = "loess", color = "blue") +
@@ -500,21 +491,18 @@ ggplot(diag_log, aes(x = leverage, y = std_residuals)) +
 # Classification thresholds
 # ==============================
 
-df_no_na$pred_010 <- ifelse(df_no_na$pred_prob > 0.10, 1, 0)
-df_no_na$pred_020 <- ifelse(df_no_na$pred_prob > 0.20, 1, 0)
-df_no_na$pred_030 <- ifelse(df_no_na$pred_prob > 0.30, 1, 0)
+df_no_na_snr$pred_010 <- ifelse(df_no_na_snr$pred_prob > 0.10, 1, 0)
+df_no_na_snr$pred_020 <- ifelse(df_no_na_snr$pred_prob > 0.20, 1, 0)
+df_no_na_snr$pred_030 <- ifelse(df_no_na_snr$pred_prob > 0.30, 1, 0)
 
-# ==============================
 # Confusion matrices
-# ==============================
-
-plot_confusion(df_no_na$pred_010, df_no_na$confirmed,
+plot_confusion(df_no_na_snr$pred_010, df_no_na_snr$confirmed,
                "Confusion Matrix (threshold = 0.10)")
 
-plot_confusion(df_no_na$pred_020, df_no_na$confirmed,
+plot_confusion(df_no_na_snr$pred_020, df_no_na_snr$confirmed,
                "Confusion Matrix (threshold = 0.20)")
 
-plot_confusion(df_no_na$pred_030, df_no_na$confirmed,
+plot_confusion(df_no_na_snr$pred_030, df_no_na_snr$confirmed,
                "Confusion Matrix (threshold = 0.30)")
 
 # ==============================
@@ -680,17 +668,3 @@ df_no_na_multi$pred_030 <- ifelse(df_no_na_multi$pred_prob > 0.30, 1, 0)
 plot_confusion(df_no_na_multi$pred_010, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.10)")
 plot_confusion(df_no_na_multi$pred_020, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.20)")
 plot_confusion(df_no_na_multi$pred_030, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.30)")
-
-# ==============================
-# ROC
-# ==============================
-
-roc_multi <- roc(df_no_na_multi$confirmed,
-                 df_no_na_multi$pred_prob)
-
-plot(roc_multi,
-     col = "blue",
-     lwd = 2,
-     main = "ROC Curve - Multiple Logistic Regression")
-
-auc(roc_multi)
