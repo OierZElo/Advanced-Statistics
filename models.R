@@ -266,7 +266,7 @@ ggplot(diag_df, aes(x = leverage, y = std_residuals)) +
   theme_minimal()
 
 # ==============================
-# Simple Logistic Regression
+# Simple Logistic Regression (Koi_prad)
 # ==============================
 
 # Prepare data
@@ -399,6 +399,123 @@ plot_confusion <- function(pred, actual, title) {
 plot_confusion(df_no_na$pred_010, df_no_na$confirmed, "Confusion Matrix (threshold = 0.10)")
 plot_confusion(df_no_na$pred_020, df_no_na$confirmed, "Confusion Matrix (threshold = 0.20)")
 plot_confusion(df_no_na$pred_030, df_no_na$confirmed, "Confusion Matrix (threshold = 0.30)")
+
+# ==============================
+# Simple Logistic Regression (koi_model_snr)
+# ==============================
+
+# Prepare data
+df_no_na <- df %>%
+  select(koi_disposition, koi_model_snr) %>%
+  na.omit()
+
+# Sort values for a cleaner probability curve
+df_no_na <- df_no_na[order(df_no_na$koi_model_snr), ]
+
+# Create binary response variable
+df_no_na$confirmed <- ifelse(df_no_na$koi_disposition == "CONFIRMED", 1, 0)
+
+# ==============================
+# Fit logistic regression model
+# ==============================
+
+model_log_simple <- glm(confirmed ~ koi_model_snr,
+                        data = df_no_na,
+                        family = binomial)
+
+# Model summary and odds ratios
+summary(model_log_simple)
+exp(coef(model_log_simple))
+
+# ==============================
+# Predicted probabilities
+# ==============================
+
+df_no_na$pred_prob <- predict(model_log_simple, type = "response")
+
+# ==============================
+# Probability plot
+# ==============================
+
+ggplot(df_no_na, aes(x = koi_model_snr, y = confirmed)) +
+  geom_jitter(height = 0.02, alpha = 0.2) +
+  geom_line(aes(y = pred_prob), color = "red", linewidth = 1) +
+  labs(
+    x = "Signal-to-Noise Ratio",
+    y = "Probability of being Confirmed",
+    title = "Simple Logistic Regression: koi_model_snr -> confirmed"
+  ) +
+  theme_minimal()
+
+# ==============================
+# Diagnostic data
+# ==============================
+
+diag_log <- data.frame(
+  fitted = fitted(model_log_simple),
+  residuals = residuals(model_log_simple, type = "deviance"),
+  std_residuals = rstandard(model_log_simple),
+  leverage = hatvalues(model_log_simple)
+)
+
+# ==============================
+# Diagnostic plots
+# ==============================
+
+# Residuals vs fitted values
+ggplot(diag_log, aes(x = fitted, y = residuals)) +
+  geom_point(alpha = 0.3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  labs(
+    title = "Residuals vs Fitted Values",
+    x = "Fitted probabilities",
+    y = "Deviance residuals"
+  ) +
+  theme_minimal()
+
+# Observed vs predicted probabilities
+ggplot(df_no_na, aes(x = pred_prob, y = confirmed)) +
+  geom_jitter(height = 0.02, alpha = 0.2) +
+  labs(
+    title = "Observed vs Predicted Probabilities",
+    x = "Predicted probability",
+    y = "Observed outcome"
+  ) +
+  theme_minimal()
+
+# Residuals vs leverage
+ggplot(diag_log, aes(x = leverage, y = std_residuals)) +
+  geom_point(alpha = 0.4) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(se = FALSE, method = "loess", color = "blue") +
+  labs(
+    title = "Residuals vs Leverage",
+    x = "Leverage",
+    y = "Standardized residuals"
+  ) +
+  theme_minimal()
+
+# ==============================
+# Classification thresholds
+# ==============================
+
+df_no_na$pred_010 <- ifelse(df_no_na$pred_prob > 0.10, 1, 0)
+df_no_na$pred_020 <- ifelse(df_no_na$pred_prob > 0.20, 1, 0)
+df_no_na$pred_030 <- ifelse(df_no_na$pred_prob > 0.30, 1, 0)
+
+# ==============================
+# Confusion matrices
+# ==============================
+
+plot_confusion(df_no_na$pred_010, df_no_na$confirmed,
+               "Confusion Matrix (threshold = 0.10)")
+
+plot_confusion(df_no_na$pred_020, df_no_na$confirmed,
+               "Confusion Matrix (threshold = 0.20)")
+
+plot_confusion(df_no_na$pred_030, df_no_na$confirmed,
+               "Confusion Matrix (threshold = 0.30)")
 
 # ==============================
 # Multiple Logistic Regression
