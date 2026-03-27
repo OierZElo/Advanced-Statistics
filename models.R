@@ -668,3 +668,48 @@ df_no_na_multi$pred_030 <- ifelse(df_no_na_multi$pred_prob > 0.30, 1, 0)
 plot_confusion(df_no_na_multi$pred_010, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.10)")
 plot_confusion(df_no_na_multi$pred_020, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.20)")
 plot_confusion(df_no_na_multi$pred_030, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.30)")
+
+# ==============================
+# ROC - SIMPLE MODELS (PRAD vs SNR)
+# ==============================
+
+library(pROC)
+
+roc_prad <- roc(df_no_na$confirmed, df_no_na$pred_prob)
+roc_snr  <- roc(df_no_na_snr$confirmed, df_no_na_snr$pred_prob)
+
+plot(roc_prad,
+     col = "blue",
+     lwd = 2,
+     main = "ROC Curves - Simple Logistic Models")
+
+plot(roc_snr,
+     col = "red",
+     lwd = 2,
+     add = TRUE)
+
+legend("bottomright",
+       legend = c(
+         paste0("PRAD (AUC = ", round(auc(roc_prad), 3), ")"),
+         paste0("SNR (AUC = ", round(auc(roc_snr), 3), ")")
+       ),
+       col = c("blue", "red"),
+       lwd = 2)
+auc(roc_prad)
+auc(roc_snr)
+# ==============================
+# ROC - MULTIPLE LOGISTIC MODEL
+# ==============================
+
+roc_multi <- roc(df_no_na_multi$confirmed, df_no_na_multi$pred_prob)
+
+plot(roc_multi,
+     col = "darkgreen",
+     lwd = 2,
+     main = "ROC Curve - Multiple Logistic Model")
+
+legend("bottomright",
+       legend = paste0("MULTI (AUC = ", round(auc(roc_multi), 3), ")"),
+       col = "darkgreen",
+       lwd = 2)
+auc(roc_multi)
