@@ -355,12 +355,10 @@ ggplot(diag_log, aes(x = leverage, y = std_residuals)) +
   theme_minimal()
 
 # ==============================
-# Classification thresholds
+# threshold
 # ==============================
 
-df_no_na$pred_010 <- ifelse(df_no_na$pred_prob > 0.10, 1, 0)
-df_no_na$pred_020 <- ifelse(df_no_na$pred_prob > 0.20, 1, 0)
-df_no_na$pred_030 <- ifelse(df_no_na$pred_prob > 0.30, 1, 0)
+df_no_na$pred_optimal <- ifelse(df_no_na$pred_prob > 0.1545995, 1, 0)
 
 # ==============================
 # Confusion matrix function
@@ -396,9 +394,7 @@ plot_confusion <- function(pred, actual, title) {
 # Confusion matrices
 # ==============================
 
-plot_confusion(df_no_na$pred_010, df_no_na$confirmed, "Confusion Matrix (threshold = 0.10)")
-plot_confusion(df_no_na$pred_020, df_no_na$confirmed, "Confusion Matrix (threshold = 0.20)")
-plot_confusion(df_no_na$pred_030, df_no_na$confirmed, "Confusion Matrix (threshold = 0.30)")
+plot_confusion(df_no_na$pred_optimal, df_no_na$confirmed, "Confusion Matrix (threshold = 0.15)")
 # ==============================
 # Simple Logistic Regression (koi_model_snr)
 # ==============================
@@ -491,19 +487,11 @@ ggplot(diag_log_snr, aes(x = leverage, y = std_residuals)) +
 # Classification thresholds
 # ==============================
 
-df_no_na_snr$pred_010 <- ifelse(df_no_na_snr$pred_prob > 0.10, 1, 0)
-df_no_na_snr$pred_020 <- ifelse(df_no_na_snr$pred_prob > 0.20, 1, 0)
-df_no_na_snr$pred_030 <- ifelse(df_no_na_snr$pred_prob > 0.30, 1, 0)
+df_no_na_snr$pred_optimal <- ifelse(df_no_na_snr$pred_prob > 0.2829588, 1, 0)
 
 # Confusion matrices
 plot_confusion(df_no_na_snr$pred_010, df_no_na_snr$confirmed,
-               "Confusion Matrix (threshold = 0.10)")
-
-plot_confusion(df_no_na_snr$pred_020, df_no_na_snr$confirmed,
-               "Confusion Matrix (threshold = 0.20)")
-
-plot_confusion(df_no_na_snr$pred_030, df_no_na_snr$confirmed,
-               "Confusion Matrix (threshold = 0.30)")
+               "Confusion Matrix (threshold = 0.28)")
 
 # ==============================
 # Multiple Logistic Regression
@@ -657,17 +645,13 @@ ggplot(diag_log_multi, aes(x = leverage, y = std_residuals)) +
 # ==============================
 
 # Create predictions for different thresholds
-df_no_na_multi$pred_010 <- ifelse(df_no_na_multi$pred_prob > 0.10, 1, 0)
-df_no_na_multi$pred_020 <- ifelse(df_no_na_multi$pred_prob > 0.20, 1, 0)
-df_no_na_multi$pred_030 <- ifelse(df_no_na_multi$pred_prob > 0.30, 1, 0)
-
+df_no_na_multi$pred_optimal <- ifelse(df_no_na_multi$pred_prob > 0.2722934, 1, 0)
 # ==============================
 # Confusion matrices
 # ==============================
 
-plot_confusion(df_no_na_multi$pred_010, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.10)")
-plot_confusion(df_no_na_multi$pred_020, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.20)")
-plot_confusion(df_no_na_multi$pred_030, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.30)")
+plot_confusion(df_no_na_multi$pred_optimal, df_no_na_multi$confirmed, "Confusion Matrix (threshold = 0.27)")
+
 
 # ==============================
 # ROC - SIMPLE MODELS (PRAD vs SNR)
@@ -713,3 +697,45 @@ legend("bottomright",
        col = "darkgreen",
        lwd = 2)
 auc(roc_multi)
+
+# ========================================
+# optimal thresholds
+# ========================================
+
+get_optimal_threshold <- function(actual, prob) {
+  
+  roc_obj <- roc(actual, prob)
+  
+  coords_opt <- coords(
+    roc_obj,
+    x = "best",
+    best.method = "youden",
+    ret = c("threshold", "sensitivity", "specificity")
+  )
+  
+  return(list(
+    threshold = coords_opt["threshold"],
+    sensitivity = coords_opt["sensitivity"],
+    specificity = coords_opt["specificity"],
+    roc = roc_obj
+  ))
+}
+
+
+#simple logistic model (koi_prad)
+res_prad <- get_optimal_threshold(df_no_na$confirmed, df_no_na$pred_prob)
+
+res_prad$threshold
+
+#simple logistic model 2 (snr)
+res_snr <- get_optimal_threshold(df_no_na_snr$confirmed, df_no_na_snr$pred_prob)
+
+res_snr$threshold
+
+#multiple logistic model
+res_multi <- get_optimal_threshold(df_no_na_multi$confirmed, df_no_na_multi$pred_prob)
+
+res_multi$threshold
+
+
+
